@@ -1,5 +1,6 @@
 // Keep the type import as it is
 import { MessageAggregateRootDomain } from 'groupfi-sdk-chat';
+import { debounce } from './utils';
 
 // Convert runtime module imports to CommonJS style
 const { SetManager } = require('groupfi-sdk-chat');
@@ -102,7 +103,7 @@ const notifyNewGroupMessage = async (domain: MessageAggregateRootDomain, address
         console.log(`New message detected in group ${groupId}: ${latestMessage}`);
 
         // Make a POST request to the remote API using fetch
-        const response = await fetch('http://localhost:3010/msg/receive', {  // Adjusted URL based on your API documentation
+        const response = await fetch('http://localhost:8010/msg/receive', {  // Adjusted URL based on your API documentation
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -135,14 +136,15 @@ export const enterGroup = async (domain: MessageAggregateRootDomain, address: st
     if (domain.isWalletConnected()) {
         domain.getGroupFiService().enablePreparedRemainderHint(); // Use the get method
     }
-
+    
     // Add a callback for new messages in the group conversation
-    domain.onConversationDataChanged(groupId, async () => {
-        // log conversation data changed for groupId,
+    domain.onConversationDataChanged(groupId, debounce(async () => {
+        // log conversation data changed for groupId
         console.log(`=================================================> Conversation data changed for group ${groupId}`);
         // Notify the remote API when a new message is detected, now including the domain and address
         await notifyNewGroupMessage(domain, address, groupId);
-    });
+    }, 1200));
+    
 };
 
 
