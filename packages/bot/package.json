@@ -16,7 +16,10 @@
   "dependencies": {
     "cross-env": "^7.0.3",
     "ethers": "^6.13.2",
-    "fastify": "^4.28.1"
+    "fastify": "^4.28.1",
+    "@iota/crypto.js": "2.0.0-rc.2",
+    "@iota/iota.js": "2.0.0-rc.4",
+    "@iota/util.js": "2.0.0-rc.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
