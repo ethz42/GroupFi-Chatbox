@@ -5,7 +5,7 @@ const { exec } = require('child_process');
 const num = process.argv[2] || 0;
 
 // Adjusted storage path
-const port = 4000 + parseInt(num, 10);
+const port = 3000 + parseInt(num, 10);
 const storagePath = path.join(__dirname, `../storage/${num}`);
 const processName = `groupfi-ai-bot-prod-${num}`;
 
