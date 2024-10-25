@@ -21,7 +21,7 @@ if (!fs.existsSync(storagePath)) {
 console.log(`Starting with port: ${port}, storage path: ${storagePath}, name: ${processName}`);
 
 // Construct the PM2 start command
-const command = `cross-env NODE_ENV=production PORT=${port} STORAGE_PATH=${storagePath} pm2 start dist/server.js --name ${processName} --update-env`;
+const command = `cross-env NODE_ENV=staging PORT=${port} STORAGE_PATH=${storagePath} pm2 start dist/server.js --name ${processName} --update-env`;
 
 // Execute the command
 exec(command, (error, stdout, stderr) => {
