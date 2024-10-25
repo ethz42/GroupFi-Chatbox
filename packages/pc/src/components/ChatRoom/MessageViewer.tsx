@@ -1,10 +1,12 @@
 import { classNames } from 'utils'
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import {
   parseMessageAndQuotedMessage,
   parseOriginFromRealMessage
 } from './MessageItem'
 
+// @ts-ignore
+import ImgErrorSVG from 'public/icons/error-img.svg?react'
 // @ts-ignore
 import SpinSVG from 'public/icons/spin.svg?react'
 
@@ -13,9 +15,6 @@ import 'photoswipe/style.css'
 
 import linkifyit from 'linkify-it'
 const linkify = new linkifyit()
-
-// const URLRegexp =
-//   /((?:https?:)?(?:\/\/)?(?:(?:(?:[\w-]+\.)+[a-zA-Z]{2,})|(?:(?:\d+\.){3}\d{1,3}))(?:\:\d+)?[\/[a-zA-Z0-9@:%_\+.~#?&//=,-]*)/g
 
 import { Emoji, EmojiStyle } from 'emoji-picker-react'
 
@@ -192,11 +191,11 @@ export default function MessageViewer(props: {
 
   const nonImgElements = elements.map(({ type, value }, index) => {
     if (type === 'text') {
-      return value
+      return <Fragment key={index}>{value}</Fragment>
     } else if (type === 'link') {
       const href = value.startsWith('http') ? value : `http://${value}`
       return (
-        <a href={href} target="_blank" className="link">
+        <a href={href} key={index} target="_blank" className="link">
           {value}
         </a>
       )
@@ -227,6 +226,13 @@ export default function MessageViewer(props: {
         }
       }
     }
+  }, [])
+
+  const [oneImgHeight, setOneImgHeight] = useState<number | undefined>(
+    undefined
+  )
+  const onImgFailedCb = useCallback((height: number) => {
+    setOneImgHeight(height)
   }, [])
 
   if (imgElements.length === 0) {
@@ -278,6 +284,13 @@ export default function MessageViewer(props: {
 
   const getImgContainerHeight = () => {
     if (imgElements.length === 1) {
+      const { src } = getImgUrlAndRatio(imgElements[0])
+      if (imgUploadFailedCache.get(src)) {
+        return 108
+      }
+      if (oneImgHeight) {
+        return oneImgHeight
+      }
       return getImgHeight(172, imgElements[0] as ImgType)
     }
     const imgWidth = getImgWidth()
@@ -297,8 +310,9 @@ export default function MessageViewer(props: {
     return 0
   }
 
-  const gridCols =
-    imgElements.length === 1 ? 'grid-cols-[172px]' : 'grid-cols-[1fr_1fr]'
+  // const gridCols =
+  //   imgElements.length === 1 ? 'grid-cols-[172px]' : 'grid-cols-[1fr_1fr]'
+  const gridCols = imgElements.length === 1 ? '' : 'grid-cols-[1fr_1fr]'
 
   return (
     <>
@@ -322,28 +336,10 @@ export default function MessageViewer(props: {
               ratio={ratio}
               width={width!}
               height={height}
+              onImgFailedCb={onImgFailedCb}
               imgUrl={src}
               clientWidth={clientWidth}
             />
-            // <a
-            //   href={src}
-            //   key={src}
-            //   data-pswp-width={clientWidth}
-            //   data-pswp-height={Math.ceil(clientWidth / ratio)}
-            //   target="_blank"
-            //   rel="noreferrer"
-            // >
-            //   <img
-            //     style={{
-            //       width,
-            //       height
-            //     }}
-            //     key={src}
-            //     src={src}
-            //     data-src={src}
-            //     className={classNames('rounded-lg img cursor-pointer')}
-            //   />
-            // </a>
           )
         })}
       </div>
@@ -358,9 +354,17 @@ function ImgViewer(props: {
   width: number
   height: number
   ratio: number
+  onImgFailedCb: (height: number) => void
   clientWidth: number
 }) {
-  const { imgUrl: src, ratio, width, height, clientWidth } = props
+  const {
+    imgUrl: src,
+    ratio,
+    width,
+    height,
+    clientWidth,
+    onImgFailedCb
+  } = props
   const [isImgUploaded, setIsImgUploaded] = useState(true)
 
   const [isImgUploadFailed, setIsImgUploadFailed] = useState(
@@ -391,6 +395,7 @@ function ImgViewer(props: {
               setTimeout(tryCheckImgUploaded, 100)
             } else {
               imgUploadFailedCache.set(src, true)
+              onImgFailedCb(108)
               setIsImgUploadFailed(true)
             }
           })
@@ -408,10 +413,26 @@ function ImgViewer(props: {
   if (isImgUploadFailed || !checkIsImgSrc(src)) {
     return (
       <div
-        style={{ width, height }}
-        className={classNames('flex flex-row justify-center items-center')}
+        style={{ width: 142, height: 108 }}
+        className={classNames(
+          'flex flex-col justify-center items-center bg-white rounded-lg dark:bg-[#212122] '
+        )}
       >
-        Img Upload Failed
+        <ImgErrorSVG className={classNames('text-[#2C2C2E] dark:text-white')} />
+        <div
+          className={classNames(
+            'text-xs font-medium mt-0.5 text-[#2c2c2e] dark:text-white'
+          )}
+        >
+          OUPS!
+        </div>
+        <div
+          className={classNames(
+            'text-[10px] text-[#2c2c2e] dark:text-[#959596]'
+          )}
+        >
+          Something Went Wrong
+        </div>
       </div>
     )
   }
@@ -429,6 +450,10 @@ function ImgViewer(props: {
         />
       </div>
     )
+  }
+
+  if (clientWidth === undefined) {
+    return null
   }
 
   return (

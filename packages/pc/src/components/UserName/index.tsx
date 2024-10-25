@@ -4,11 +4,7 @@ import TanglePayLogo from 'public/icons/tanglepay-logo.svg'
 import SpinSVG from 'public/icons/spin.svg?react'
 import ErrorCircle from 'public/icons/error-circle.svg'
 import ErrorCancel from 'public/icons/error-cancel.svg'
-import {
-  DelegationMode,
-  useMessageDomain,
-  Profile
-} from 'groupfi-sdk-chat'
+import { DelegationMode, useMessageDomain, Profile } from 'groupfi-sdk-chat'
 
 import {
   ContainerWrapper,
@@ -189,10 +185,12 @@ export function UserNameCreation(props: {
                 setMinting(true)
                 setModalShow(true)
 
+                const lowercaseName = name.toLocaleLowerCase()
+
                 const res =
                   mode === DelegationMode
-                    ? await groupFiService.isNameDuplicate(name)
-                    : await groupFiService.mintNicknameNFT(name)
+                    ? await groupFiService.isNameDuplicate(lowercaseName)
+                    : await groupFiService.mintNicknameNFT(lowercaseName)
 
                 if (!res.result) {
                   setModalShow(false)
@@ -205,7 +203,7 @@ export function UserNameCreation(props: {
                 if (mode !== DelegationMode) {
                   setMinting(false)
                 } else {
-                  const profile = { chainId: 148, name }
+                  const profile = { chainId: 148, name: lowercaseName }
                   messageDomain.setProfile(profile, true)
                 }
               } catch (error: any) {
@@ -346,8 +344,11 @@ function UserNameSelection(props: {
         {profileList.map((profile) => (
           <div
             key={profile.chainId}
+            onClick={() => {
+              setSelectedChainId(Number(profile.chainId))
+            }}
             className={classNames(
-              'flex flex-row p-3 items-center rounded-xl mb-4 border border-2',
+              'flex flex-row p-3 items-center rounded-xl mb-4 border border-2 cursor-pointer',
               selectedChainId === profile.chainId
                 ? 'border-accent-600 dark:border-accent-500'
                 : 'border-[#F2F2F7]'
@@ -361,9 +362,11 @@ function UserNameSelection(props: {
                   : addressToPngSrcV2(groupFiService.sha256Hash(currentAddress))
               }
             />
-            <div className={classNames('font-medium dark:text-white')}>{profile.name}</div>
+            <div className={classNames('font-medium dark:text-white')}>
+              {profile.name}
+            </div>
             <input
-              onChange={handleChange}
+              onChange={() => {}}
               value={profile.chainId}
               checked={selectedChainId === profile.chainId}
               type="radio"

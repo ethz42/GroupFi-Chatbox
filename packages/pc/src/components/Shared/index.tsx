@@ -180,7 +180,7 @@ export function ReturnIcon(props: { backUrl?: string }) {
       to={(backUrl || -1) as any}
       replace={!!backUrl}
       className={classNames(
-        'flex-none w-6 ml-4 mr-2.5 my-2.5 text-left cursor-pointer'
+        'flex-none w-6 ml-4 mr-2.5 my-3 text-left cursor-pointer'
       )}
     >
       <i
@@ -238,7 +238,13 @@ export function GroupIcon(props: {
 
   // 优先渲染的，放在后面，使用的是 pop()
   const urls = [groupTokenUri, groupConfigedIcon].filter(Boolean) as string[]
-  return <GroupTokenIcon {...props} urls={urls} />
+  return <GroupTokenIcon {...props} urls={filterNotFoundUrl(urls)} />
+}
+
+const imgNotFoundCache = new Map<string, true>()
+
+function filterNotFoundUrl(urls: string[]) {
+  return urls.filter((url) => imgNotFoundCache.get(url) === undefined)
 }
 
 function GroupTokenIcon(props: {
@@ -258,8 +264,8 @@ function GroupTokenIcon(props: {
     <div
       className={classNames(
         'relative bg-gray-200/70 rounded mr-4 my-3 flex-none',
-        `w-[46px]`,
-        `h-[46px]`
+        `w-12`,
+        `h-12`
       )}
     >
       <div className={classNames('w-full h-full')}>
@@ -267,6 +273,7 @@ function GroupTokenIcon(props: {
           className={classNames('rounded w-full h-full object-cover')}
           src={currentUrl}
           onError={() => {
+            imgNotFoundCache.set(currentUrl, true)
             setCurrentUrl(urls.pop())
           }}
         />
@@ -406,8 +413,8 @@ export function GroupMemberIcon(props: {
     <div
       className={classNames(
         'relative bg-gray-200/70 rounded mr-4 my-3 flex-none',
-        `w-[46px]`,
-        `h-[46px]`
+        `w-12`,
+        `h-12`
       )}
     >
       {element}
@@ -519,7 +526,7 @@ export function GroupListTab(props: { groupFiService: GroupFiService }) {
         }}
         className={classNames(
           flex ? flex : 'flex-1',
-          'pt-2.5 pb-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+          'pt-3 pb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
           index === 0 ? 'rounded-tl-2xl' : undefined,
           // index === tabList.length - 1 ? 'rounded-tr-2xl' : undefined,
           activeTab === key
@@ -537,7 +544,7 @@ export function ButtonLoading(props: { classes?: string }) {
   return (
     <div
       className={classNames(
-        'loader-spinner loader-spinner-md',
+        'loader-spinner loader-spinner-md text-accent-600 dark:text-accent-500',
         props.classes ?? ''
       )}
     >
@@ -567,7 +574,7 @@ export function GroupTitle({
   return (
     <div
       className={classNames(
-        'flex-auto flex flex-row justify-center my-2.5 dark:text-white overflow-hidden'
+        'flex-auto flex flex-row justify-center my-3 dark:text-white overflow-hidden'
       )}
     >
       {showAnnouncementIcon && (
@@ -602,7 +609,7 @@ export function MoreIcon({ to }: { to: string }) {
         navigate(to)
       }}
       className={classNames(
-        'flex-none line-height-0 ml-2.5 mr-1.5 my-1.5 w-8 h-8 flex flex-row justify-center items-center cursor-pointer'
+        'flex-none line-height-0 ml-2.5 mr-1.5 my-2 w-8 h-8 flex flex-row justify-center items-center cursor-pointer'
       )}
     >
       {Array.from({ length: 3 }, (_, index) => index + 1).map((item, idx) => (
