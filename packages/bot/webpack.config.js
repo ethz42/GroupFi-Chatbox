@@ -38,10 +38,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'typeof window': JSON.stringify('undefined'),
-      'window': JSON.stringify('undefined'),
-    }),
   ],
   optimization: {
     minimize: true,
