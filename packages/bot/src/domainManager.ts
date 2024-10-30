@@ -143,7 +143,7 @@ export const enterGroup = async (domain: MessageAggregateRootDomain, address: st
         console.log(`=================================================> Conversation data changed for group ${groupId}`);
         // Notify the remote API when a new message is detected, now including the domain and address
         await notifyNewGroupMessage(domain, address, groupId);
-    }, 1200));
+    }, 2200));
     
 };
 
