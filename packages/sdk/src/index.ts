@@ -44,12 +44,6 @@ function setContext(ctx: TargetContext) {
   context = ctx
 }
 
-// function isTouchEnabled() {
-//   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-// }
-
-// const isMobile = isTouchEnabled();
-
 const chatboxRequests: Record<string, EventCallback> = {}
 let _seq = 1
 const _rpcVersion = 101
@@ -255,28 +249,18 @@ const ChatboxSDK: {
 }
 
 window.addEventListener('message', function (event: MessageEvent) {
-  // console.info('🚀 ~ event:', event)
-  // console.info('🚀 ~ context:', context)
   if (context === undefined) {
     return
   }
-  // console.info('🚀 ~ event.origin:', event.origin)
-  // console.info('🚀 ~ event.source:', event.source)
-  // console.info('🚀 ~ event.ports:', event.ports)
-  // console.info('🚀 ~ event.data:', event.data)
-  // console.info('🚀 ~ context.targetWindow:', context.targetWindow)
-  // console.info('🚀 ~ context.targetOrigin:', context.targetOrigin)
   if (
     event.source !== context.targetWindow ||
     event.origin !== context.targetOrigin
   ) {
     return
   }
-  console.info('-----------------------------')
   let { cmd, data, reqId, code } = event.data
   cmd = (cmd ?? '').replace('contentToDapp##', '')
   switch (cmd) {
-    case 'get_trollbox_info':
     case 'get_chatbox_info': {
       ChatboxSDK.chatboxVersion = data.version
       ChatboxSDK.isIframeLoaded = true
@@ -284,35 +268,12 @@ window.addEventListener('message', function (event: MessageEvent) {
       const eventData: TrollboxReadyEventData = {
         chatboxVersion: data.version
       }
-
-      // Set default groups
-      // TrollboxSDK.request({
-      //   method: 'setForMeGroups',
-      //   params: {
-      //     includes: [{groupName: 'smr-whale'}],
-      //   },
-      // })
-      //   .then((res) => {})
-      //   .catch((error) => {
-      //     console.log('Set default customization groups error', error);
-      //   })
-      //   .finally(() => {
-      //     window.dispatchEvent(
-      //       new CustomEvent('trollbox-ready', { detail: eventData })
-      //     );
-      //     TrollboxSDK.events.emit('trollbox-ready', eventData);
-      //   });
-      window.dispatchEvent(
-        new CustomEvent('trollbox-ready', { detail: eventData })
-      )
       window.dispatchEvent(
         new CustomEvent('chatbox-ready', { detail: eventData })
       )
-      ChatboxSDK.events.emit('trollbox-ready', eventData)
       ChatboxSDK.events.emit('chatbox-ready', eventData)
       break
     }
-    case 'trollbox_request':
     case 'chatbox_request': {
       const callBack =
         chatboxRequests[`chatbox_request_${data.method}_${reqId ?? 0}`]
