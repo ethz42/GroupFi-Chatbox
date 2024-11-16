@@ -1,4 +1,4 @@
-import { Brevis, ErrCode, ProofRequest, Prover, ReceiptData, Field } from 'brevis-sdk-typescript';
+import { Brevis, ErrCode, ProofRequest, Prover, StorageData, asUint248 } from 'brevis-sdk-typescript';
 import { ethers } from 'ethers';
 
 async function main() {
@@ -7,38 +7,26 @@ async function main() {
 
     const proofReq = new ProofRequest();
 
-    // Assume transaction hash will provided by command line
-    const hash = process.argv[2]
+    // Assume block number / slot will provided by command line
+    const blockNumber = parseInt(process.argv[2]);
+    const userAddress = process.argv[3];
+    const slot = process.argv[4];
+    const usdtAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 
-    // Brevis Partner KEY IS NOT required to submit request to Brevis Gateway. 
-    // It is used only for Brevis Partner Flow
-    const brevis_partner_key = process.argv[3] ?? ""
-    const callbackAddress = process.argv[4] ?? ""
+    proofReq.addStorage(
+        new StorageData({
+            block_num: blockNumber,
+            address: usdtAddress,
+            slot: slot,
+        })
+    )
 
-    if (hash.length === 0) {
-        console.error("empty transaction hash")
-        return 
-    }
-    
-    proofReq.addReceipt(
-        new ReceiptData({
-            tx_hash: hash,
-            fields: [
-                new Field({
-                    log_pos: 0,
-                    is_topic: true,
-                    field_index: 1,
-                }),
-                new Field({
-                    log_pos: 0,
-                    is_topic: false,
-                    field_index: 0,
-                }),
-            ],
-        }),
-    );
+    const basic = {
+        UserAddr: asUint248(userAddress),
+    };
+    proofReq.setCustomInput(basic);
 
-    console.log(`Send prove request for ${hash}`)
+    console.log(`Send prove request for ${blockNumber}, ${userAddress}, ${slot}`);
 
     const proofRes = await prover.prove(proofReq);
     // error handling
@@ -62,7 +50,7 @@ async function main() {
     console.log('proof', proofRes.proof);
 
     try {
-        const brevisRes = await brevis.submit(proofReq, proofRes, 1, 11155111, 0, brevis_partner_key, callbackAddress);
+        const brevisRes = await brevis.submit(proofReq, proofRes, 1, 11155111, 0, "", "");
         console.log('brevis res', brevisRes);
 
         await brevis.wait(brevisRes.queryKey, 11155111);
