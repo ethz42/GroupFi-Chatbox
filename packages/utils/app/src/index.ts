@@ -1,5 +1,32 @@
-import { Brevis, ErrCode, ProofRequest, Prover, ReceiptData, Field } from 'brevis-sdk-typescript';
+import { Brevis, ErrCode, ProofRequest, Prover, StorageData, asUint248 } from 'brevis-sdk-typescript';
 import { ethers } from 'ethers';
+
+function calculateBalanceSlot(userAddress: string): string {
+    // Convert address to bytes32 format
+    const paddedAddress = ethers.utils.hexZeroPad(userAddress, 32);
+    // USDT uses slot 2 for balanceOf mapping
+    const slot = 2;
+
+    // Calculate the storage slot using keccak256(address + slot)
+    const storageSlot = ethers.utils.keccak256(
+        ethers.utils.concat([
+            paddedAddress,
+            ethers.utils.hexZeroPad(ethers.utils.hexlify(slot), 32)
+        ])
+    );
+
+    return storageSlot;
+}
+
+async function getLatestBlockNumber() {
+    // Connect to an Ethereum provider
+    const RPC_URL = 'https://eth-mainnet.g.alchemy.com/v2/-Z5IK5ZknQgG4obvaW3fCSA92G8-5CPE';
+    const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
+
+    // Get the latest block number
+    const blockNumber = await provider.getBlockNumber();
+    return blockNumber;
+}
 
 async function main() {
     const prover = new Prover('localhost:33247');
@@ -7,38 +34,26 @@ async function main() {
 
     const proofReq = new ProofRequest();
 
-    // Assume transaction hash will provided by command line
-    const hash = process.argv[2]
+    // Assume user address will provided by command line
+    const blockNumber = await getLatestBlockNumber() - 100; // block number approx finalized 20mins ago 
+    const userAddress = process.argv[2];
+    const slot = calculateBalanceSlot(userAddress);
+    const usdtAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7";
 
-    // Brevis Partner KEY IS NOT required to submit request to Brevis Gateway. 
-    // It is used only for Brevis Partner Flow
-    const brevis_partner_key = process.argv[3] ?? ""
-    const callbackAddress = process.argv[4] ?? ""
+    proofReq.addStorage(
+        new StorageData({
+            block_num: blockNumber,
+            address: usdtAddress,
+            slot: slot,
+        })
+    )
 
-    if (hash.length === 0) {
-        console.error("empty transaction hash")
-        return 
-    }
-    
-    proofReq.addReceipt(
-        new ReceiptData({
-            tx_hash: hash,
-            fields: [
-                new Field({
-                    log_pos: 0,
-                    is_topic: true,
-                    field_index: 1,
-                }),
-                new Field({
-                    log_pos: 0,
-                    is_topic: false,
-                    field_index: 0,
-                }),
-            ],
-        }),
-    );
+    const basic = {
+        UserAddr: asUint248(userAddress),
+    };
+    proofReq.setCustomInput(basic);
 
-    console.log(`Send prove request for ${hash}`)
+    console.log(`Send prove request for ${blockNumber}, ${userAddress}, ${slot}`);
 
     const proofRes = await prover.prove(proofReq);
     // error handling
@@ -62,7 +77,7 @@ async function main() {
     console.log('proof', proofRes.proof);
 
     try {
-        const brevisRes = await brevis.submit(proofReq, proofRes, 1, 11155111, 0, brevis_partner_key, callbackAddress);
+        const brevisRes = await brevis.submit(proofReq, proofRes, 1, 11155111, 0, "", "");
         console.log('brevis res', brevisRes);
 
         await brevis.wait(brevisRes.queryKey, 11155111);
