@@ -24,11 +24,13 @@ import PrivateGroupSVG from 'public/icons/private.svg?react'
 // @ts-ignore
 import NoGroupSVG from 'public/icons/no-group.svg?react'
 // @ts-ignore
+import ExploreSVG from 'public/icons/explore.svg?react'
+// @ts-ignore
 import AnnouncementGroupSVG from 'public/icons/announcement.svg?react'
 import { useGroupIsPublic } from 'hooks'
 import MessageViewer from '../ChatRoom/MessageViewer'
 
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   useMessageDomain,
   IInboxGroup,
@@ -38,14 +40,16 @@ import {
   IInboxMessage
 } from 'groupfi-sdk-chat'
 
-import { useAppSelector } from 'redux/hooks'
+import { useAppSelector,useAppDispatch } from '../../redux/hooks'
 import useForMeGroupConfig from 'hooks/useForMeGroupConfig'
 import useIsForMeGroupsLoading from 'hooks/useIsForMeGroupsLoading'
 import useMyGroupConfig from 'hooks/useMyGroupConfig'
 import useUserBrowseMode from 'hooks/useUserBrowseMode'
 import useAnnouncement from 'hooks/useAnnouncement'
 import useProfile from 'hooks/useProfile'
-import { Name } from 'components/Shared'
+import { changeActiveTab } from '../../redux/appConfigSlice'
+
+
 
 export default function GropuList() {
   const { messageDomain } = useMessageDomain()
@@ -54,6 +58,7 @@ export default function GropuList() {
   const [inboxList, setInboxList] = useState<IInboxGroup[]>([])
 
   const isUserBrowseMode = useUserBrowseMode()
+  const appDispatch = useAppDispatch()
 
   const refreshInboxList = async () => {
     const inboxList = await messageDomain.getInboxList()
@@ -77,9 +82,17 @@ export default function GropuList() {
   }, [])
 
   let activeTab = useAppSelector((state) => state.appConifg.activeTab)
-  activeTab = isUserBrowseMode ? 'forMe' : activeTab
+  // 修改这里：如果已连接钱包且不是浏览模式，则显示 ofMe (My Groups) 标签页
+  const currentAddress = groupFiService.getCurrentAddress()
+  useEffect(() => {
+    if (!isUserBrowseMode && currentAddress && activeTab === 'forMe') {
+      appDispatch(changeActiveTab('ofMe'))
+    }
+  }, [currentAddress, isUserBrowseMode])
 
   const announcement = useAnnouncement()
+
+  const navigate = useNavigate()
 
   return (
     <ContainerWrapper>
@@ -106,6 +119,17 @@ export default function GropuList() {
           <UserProfile groupFiService={groupFiService} />
         )}
       </ContentWrapper>
+      <div className="flex-none border-t border-black/10 dark:border-gray-600 p-2">
+        <button 
+          onClick={() => navigate('/discover')}
+          className="w-full flex items-center justify-center space-x-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
+        >
+          <ExploreSVG className={classNames(
+            'w-5 h-5'
+          )}/>
+          <span>Discover</span>
+        </button>
+      </div>
     </ContainerWrapper>
   )
 }
@@ -124,6 +148,11 @@ function ForMeGroups(props: {
   announcement: IIncludesAndExcludes[] | undefined
 }) {
   const { groupFiService, inboxList, announcement, isUserBrowseMode } = props
+
+  // 如果是浏览模式，直接返回空提示
+  if (isUserBrowseMode) {
+    return <NoGroupPrompt groupType="forme" />
+  }
 
   const forMeGroups = useForMeGroupConfig()
 
@@ -300,7 +329,7 @@ function NoGroupPrompt(props: { groupType: 'mygroup' | 'forme' }) {
   const { groupType } = props
   const content =
     groupType === 'forme'
-      ? 'No Available Group For You'
+      ? 'Please connect wallet'
       : groupType === 'mygroup'
       ? "You don't have any groups yet"
       : ''
@@ -360,16 +389,14 @@ function UserProfile(props: { groupFiService: GroupFiService }) {
               <div className={classNames('pl-4 cursor-pointer')}>
                 <div
                   className={classNames(
-                    'group text-base font-medium text-[#2C2C2E] dark:text-white hover:text-accent-600 dark:hover:text-accent-500 flex flex-row items-center flex flex-row'
+                    'group text-base font-medium text-[#2C2C2E] dark:text-white hover:text-accent-600 dark:hover:text-accent-500 flex flex-row items-center'
                   )}
                   onClick={navigateToProfileEdit}
                 >
-                  <div className={classNames('basic-auto break-all')}>
-                    {profile?.name ?? addressToUserName(currentAddress)}
-                  </div>
+                  {profile?.name ?? addressToUserName(currentAddress)}
                   <i
                     className={classNames(
-                      'flex-none ml-2 -rotate-[135deg] inline-block border-l-2 border-b-2 group-hover:border-accent-600 dark:group-hover:border-accent-500 border-black dark:border-white w-2 h-2'
+                      'ml-2 -rotate-[135deg] inline-block border-l-2 border-b-2 group-hover:border-accent-600 dark:group-hover:border-accent-500 border-black dark:border-white w-2 h-2'
                     )}
                   ></i>
                 </div>
@@ -386,7 +413,7 @@ function UserProfile(props: { groupFiService: GroupFiService }) {
           ) : null}
         </div>
       </div>
-      <Powered />
+      {/* <Powered /> */}
     </div>
   )
 }
@@ -419,10 +446,7 @@ function GroupListItem({
 }) {
   const navigate = useNavigate()
   // isPublic !== undefined, Actually not fetch
-  const { isPublic: isPublicFromFetch } = useGroupIsPublic(
-    groupId,
-    isPublic !== undefined
-  )
+  const { isPublic: isPublicFromFetch } = useGroupIsPublic(groupId, isPublic !== undefined)
 
   const isGroupPublic = isPublic !== undefined ? isPublic : isPublicFromFetch
 
@@ -437,6 +461,11 @@ function GroupListItem({
     isPrivateGroupNotMember || isPrivateGroupAndBrowseMode
 
   return (
+    // <Link
+    //   to={`/group/${removeHexPrefixIfExist(
+    //     groupId
+    //   )}?announcement=${isAnnouncement}`}
+    // >
     <div
       onClick={() => {
         const to = `/group/${removeHexPrefixIfExist(
@@ -495,10 +524,7 @@ function GroupListItem({
               : null}
             {!isAccessRequired && latestMessage !== undefined && (
               <>
-                <Name
-                  name={latestMessage.name}
-                  address={latestMessage.sender}
-                />
+                {latestMessage.name ?? addressToUserName(latestMessage.sender)}
                 <span className={classNames('mx-px')}>:</span>
                 <MessageViewer
                   message={latestMessage.message}
@@ -531,5 +557,6 @@ function GroupListItem({
         )}
       </div>
     </div>
+    // </Link>
   )
 }

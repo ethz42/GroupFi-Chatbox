@@ -2,9 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
     useMessageDomain,
   } from 'groupfi-sdk-chat'
-import { GroupConfigPlus, IIncludesAndExcludes } from 'groupfi-sdk-core';
+import { GroupConfigPlus } from 'groupfi-sdk-core';
 
-// Return all chat groups
 const useForMeGroupConfig = () => {
   const [forMeGroupConfig, setForMeGroupConfig] = useState<Array<GroupConfigPlus & {isMember?:boolean}>>();
   const { messageDomain } = useMessageDomain()
@@ -34,13 +33,5 @@ const useForMeGroupConfig = () => {
 
   return forMeGroupConfig;
 };
-
-// Filter out certain includes.
-export function useForMeGroupConfigWithIncludes(includes?: IIncludesAndExcludes[]) {
-  const dappGroupIds = (includes ?? []).map(item => item.groupId)
-  const allForMeGroupConfig = useForMeGroupConfig()
-
-  return allForMeGroupConfig?.filter(({dappGroupId}) => dappGroupIds.includes(dappGroupId))
-}
 
 export default useForMeGroupConfig;

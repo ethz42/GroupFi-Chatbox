@@ -18,7 +18,9 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@iota/mqtt.js": "2.0.0-rc.3",
+    "@rainbow-me/rainbowkit": "^2.2.0",
     "@reduxjs/toolkit": "^1.9.7",
+    "@tanstack/react-query": "^5.59.15",
     "@tanstack/react-virtual": "3.1.2",
     "@types/linkify-it": "^5.0.0",
     "@types/react-window-infinite-loader": "^1.0.9",
@@ -29,6 +31,7 @@
     "decimal.js": "^10.4.3",
     "emoji-mart": "^5.5.2",
     "emoji-picker-react": "^4.5.16",
+    "ethers": "^6.13.2",
     "lightgallery": "^2.7.2",
     "linkify-it": "^5.0.0",
     "lodash.debounce": "^4.0.8",
@@ -50,7 +53,9 @@
     "tanglepaysdk-common": "0.1.16",
     "three-dots": "^0.3.2",
     "twemoji": "^14.0.2",
+    "viem": "~2.21.25",
     "vite-tsconfig-paths": "^4.2.1",
+    "wagmi": "^2.12.18",
     "web3": "^4.7.0"
   },
   "devDependencies": {

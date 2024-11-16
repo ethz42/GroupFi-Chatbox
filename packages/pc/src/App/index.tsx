@@ -2,9 +2,9 @@ import { useEffect, useRef, useLayoutEffect } from 'react'
 import { useAppSelector } from '../redux/hooks'
 import { AppWithWalletType, AppLaunchBrowseMode } from './App'
 import { MqttClient } from '@iota/mqtt.js'
-import { LocalStorageAdaptor, checkIsTrollboxInIframe } from 'utils'
+import { LocalStorageAdaptor, checkIsTrollboxInIframe } from '../utils'
 import { connect } from 'mqtt'
-import { AppLoading } from 'components/Shared'
+import { AppLoading } from '../components/Shared'
 import { WalletInfo } from '../redux/types'
 
 import './App.scss'
@@ -15,7 +15,9 @@ import {
   useMessageDomain
 } from 'groupfi-sdk-chat'
 
-import sdkInstance, { WalletClient } from '../sdk'
+import sdkInstance from '../sdk'
+import { walletClient } from '../../../wallet/src/walletClient'
+import { DAPP_INCLUDES } from '../groupconfig';
 
 export default function AppEntryPoint() {
   // Check if Trollbox is in an iframe
@@ -24,6 +26,7 @@ export default function AppEntryPoint() {
 
   const walletInfo = useAppSelector((state) => state.appConifg.walletInfo)
   const isBrowseMode = useAppSelector((state) => state.appConifg.isBrowseMode)
+  
 
   const metaMaskAccountFromDapp = useAppSelector(
     (state) => state.appConifg.metaMaskAccountFromDapp
@@ -48,22 +51,25 @@ export default function AppEntryPoint() {
   useEffect(() => {
     setLocalStorageAndMqtt()
     // Set Wallet client
-    groupfiService.setWalletClient(WalletClient)
+    groupfiService.setWalletClient(walletClient)
     sdkInstance.setMesssageDomain(messageDomain)
     const stopListenningDappMessage = sdkInstance.listenningMessage()
-
     return stopListenningDappMessage
   }, [])
 
+  useEffect(() => {
+    messageDomain?.setDappIncluding({ includes: DAPP_INCLUDES })
+  })
+
   // if not in an iframe, connect TanglePay Wallet directly
-  if (!isTrollboxInIframe) {
-    return (
-      <AppWithWalletType
-        walletType={TanglePayWallet}
-        metaMaskAccountFromDapp={undefined}
-      />
-    )
-  }
+  // if (!isTrollboxInIframe) {
+  //   return (
+  //     <AppWithWalletType
+  //       walletType={TanglePayWallet}
+  //       metaMaskAccountFromDapp={undefined}
+  //     />
+  //   )
+  // }
 
   return (
     <AppLaunch

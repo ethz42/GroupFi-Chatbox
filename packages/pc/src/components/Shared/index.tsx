@@ -6,10 +6,12 @@ import {
   useEffect,
   useCallback
 } from 'react'
-import { GroupFiService, useMessageDomain } from 'groupfi-sdk-chat'
+import { GroupFiService } from 'groupfi-sdk-chat'
 import { createPortal } from 'react-dom'
 import { classNames, addressToPngSrc, copyText, addressToPngSrcV2 } from 'utils'
 import { useGroupMembers, useOneBatchUserProfile } from '../../hooks'
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+
 import EmptyIcon from 'public/icons/empty.webp'
 // @ts-ignore
 import CopySVG from 'public/icons/copy.svg?react'
@@ -32,9 +34,8 @@ import { MessageGroupMeta } from 'groupfi-sdk-core'
 import useGroupMeta from 'hooks/useGroupMeta'
 import useProfile from 'hooks/useProfile'
 
-import { addressToUserName } from 'utils'
-
 import communicator from 'sdk'
+import { AddGroupButton } from '../AddGroup';
 
 function getFieldValueFromGroupConfig(
   groupConfig: MessageGroupMeta,
@@ -66,66 +67,27 @@ export function wrapGroupMeta(
   })
 }
 
-function useSelfProfile(address: string) {
-  const { messageDomain } = useMessageDomain()
-  const currentAddress = messageDomain.getGroupFiService().getCurrentAddress()
-  const isSelf = currentAddress === address
-  const selfProfile = messageDomain.getSelfProfile()
-  return {
-    isSelf,
-    selfProfile
-  }
-}
-
-export function Name(props: { address: string; name?: string }) {
-  const { name, address } = props
-  const { isSelf, selfProfile } = useSelfProfile(address)
-
-  if (isSelf && selfProfile?.name) {
-    return selfProfile?.name
-  }
-  if (name) {
-    return props.name
-  }
-  return addressToUserName(address)
-}
-
-function useAvatar(address: string, avatar?: string) {
-  const { messageDomain } = useMessageDomain()
-  const groupFiService = messageDomain.getGroupFiService()
-  const { isSelf, selfProfile } = useSelfProfile(address)
-  if (isSelf && selfProfile?.avatar) {
-    return selfProfile.avatar
-  }
-  if (avatar) return avatar
-  return addressToPngSrcV2(groupFiService.sha256Hash(address))
-}
-
-export function Avatar(props: {
-  address: string
-  avatar?: string
-  className: string
-  onClick?: () => void
-}) {
-  const avatarSrc = useAvatar(props.address, props.avatar)
-  return (
-    <img onClick={props.onClick} src={avatarSrc} className={props.className} />
-  )
-}
-
 export function AppWrapper({ children }: PropsWithChildren<{}>) {
   return (
-    <div
-      className={classNames('w-full h-full border border-black/10 rounded-2xl')}
-    >
+    <div className="w-full h-full overflow-x-hidden">
       <div
         className={classNames(
-          'flex items-center justify-center rounded-tr-2xl absolute right-0 z-10 h-[44px] w-[48px]'
+          'w-full h-full max-w-[100vw]',
+          'border border-black/10 rounded-2xl',
+          'relative overflow-hidden'
         )}
       >
-        {CollapseTopIcon()}
+        <div
+          className={classNames(
+            'flex items-center justify-center rounded-tr-2xl absolute right-0 z-10 h-[44px] w-[48px]'
+          )}
+        >
+          {CollapseTopIcon()}
+        </div>
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden">
+          {children}
+        </div>
       </div>
-      {children}
     </div>
   )
 }
@@ -145,19 +107,9 @@ export function ContainerWrapper({
 
 export function HeaderWrapper({ children }: PropsWithChildren<{}>) {
   return (
-    <div
-      className={classNames(
-        'flex-none border-b border-black/10 dark:border-gray-600 dark:bg-[#3C3D3F] font-medium'
-      )}
-    >
+    <div className={classNames('flex-none border-b border-black/10 dark:border-gray-600 dark:bg-[#3C3D3F] font-medium')}>
       <div className={classNames('flex flex-row text-center')}>
         {children}
-        <div
-          className={classNames(
-            'flex-none border-r border-black/10 dark:border-gray-600 mt-1.5 mb-1.5'
-          )}
-        ></div>
-        <div className={classNames('flex-none basis-12')}></div>
       </div>
     </div>
   )
@@ -198,9 +150,9 @@ export function CollapseTopIcon() {
         'flex-none my-2.5 text-left cursor-pointer flex items-center'
       )}
     >
-      <a href={'javascript:void(0)'} onClick={() => collapseTop()}>
+      {/* <a href={'javascript:void(0)'} onClick={() => collapseTop()}>
         <CollapseSVG />
-      </a>
+      </a> */}
     </div>
   )
 }
@@ -229,7 +181,7 @@ export function ReturnIcon(props: { backUrl?: string }) {
       to={(backUrl || -1) as any}
       replace={!!backUrl}
       className={classNames(
-        'flex-none w-6 ml-4 mr-2.5 my-3 text-left cursor-pointer'
+        'flex-none w-6 ml-4 mr-2.5 my-2.5 text-left cursor-pointer'
       )}
     >
       <i
@@ -313,8 +265,8 @@ function GroupTokenIcon(props: {
     <div
       className={classNames(
         'relative bg-gray-200/70 rounded mr-4 my-3 flex-none',
-        `w-12`,
-        `h-12`
+        `w-[46px]`,
+        `h-[46px]`
       )}
     >
       <div className={classNames('w-full h-full')}>
@@ -462,8 +414,8 @@ export function GroupMemberIcon(props: {
     <div
       className={classNames(
         'relative bg-gray-200/70 rounded mr-4 my-3 flex-none',
-        `w-12`,
-        `h-12`
+        `w-[46px]`,
+        `h-[46px]`
       )}
     >
       {element}
@@ -508,10 +460,10 @@ export function GroupListTab(props: { groupFiService: GroupFiService }) {
 
   const currentAddress = groupFiService.getCurrentAddress()
 
-  const forMeTab = {
-    label: 'Chat',
-    key: 'forMe'
-  }
+  // const forMeTab = {
+  //   label: 'Chat',
+  //   key: 'forMe'
+  // }
 
   const myGroupsTab = {
     label: 'My Groups',
@@ -548,14 +500,23 @@ export function GroupListTab(props: { groupFiService: GroupFiService }) {
     flex: 'grow basis-14'
   }
 
+  const addTab = {
+    label: '+',
+    key: 'add',
+    flex: 'flex-none w-10',
+    render: () => (
+      <AddGroupButton />
+    )
+  }
+
   const tabList: {
     label: string
     key: string
     flex?: string
     render?: () => JSX.Element
   }[] = isUserBrowseMode
-    ? [forMeTab, placeHolder]
-    : [forMeTab, myGroupsTab, profileTab]
+    ? []
+    : [myGroupsTab, profileTab, addTab]
 
   return tabList.map(({ label, key, flex, render }, index) => (
     <Fragment key={key}>
@@ -568,6 +529,10 @@ export function GroupListTab(props: { groupFiService: GroupFiService }) {
       )}
       <div
         onClick={() => {
+          if (key === 'add') {
+            // 对于加号按钮，不执行 changeActiveTab
+            return;
+          }
           if (!label) {
             return
           }
@@ -575,7 +540,7 @@ export function GroupListTab(props: { groupFiService: GroupFiService }) {
         }}
         className={classNames(
           flex ? flex : 'flex-1',
-          'pt-3 pb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
+          'pt-2.5 pb-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
           index === 0 ? 'rounded-tl-2xl' : undefined,
           // index === tabList.length - 1 ? 'rounded-tr-2xl' : undefined,
           activeTab === key
@@ -593,7 +558,7 @@ export function ButtonLoading(props: { classes?: string }) {
   return (
     <div
       className={classNames(
-        'loader-spinner loader-spinner-md text-accent-600 dark:text-accent-500',
+        'loader-spinner loader-spinner-md',
         props.classes ?? ''
       )}
     >
@@ -623,7 +588,7 @@ export function GroupTitle({
   return (
     <div
       className={classNames(
-        'flex-auto flex flex-row justify-center my-3 dark:text-white overflow-hidden'
+        'flex-auto flex flex-row justify-center my-2.5 dark:text-white overflow-hidden'
       )}
     >
       {showAnnouncementIcon && (
@@ -658,7 +623,7 @@ export function MoreIcon({ to }: { to: string }) {
         navigate(to)
       }}
       className={classNames(
-        'flex-none line-height-0 ml-2.5 mr-1.5 my-2 w-8 h-8 flex flex-row justify-center items-center cursor-pointer'
+        'flex-none line-height-0 ml-2.5 mr-1.5 my-1.5 w-8 h-8 flex flex-row justify-center items-center cursor-pointer'
       )}
     >
       {Array.from({ length: 3 }, (_, index) => index + 1).map((item, idx) => (
@@ -963,19 +928,19 @@ export function TextWithSpinner(props: { text: string }) {
 }
 
 export function Powered() {
-  return (
-    <div
-      onClick={() => {
-        window.open('https://www.groupfi.ai')
-      }}
-      // className={classNames(
-      //   'cursor-pointer hover:opacity-75 text-right absolute bottom-3 right-4 text-sm text-[#6C737C] dark:text-white'
-      // )}
-      className={classNames(
-        'cursor-pointer hover:opacity-75 text-right text-sm pb-3 pr-4 text-[#6C737C] dark:text-white'
-      )}
-    >
-      Powered by groupfi.ai
-    </div>
-  )
+  // return (
+  //   <div
+  //     onClick={() => {
+  //       window.open('https://www.groupfi.ai')
+  //     }}
+  //     // className={classNames(
+  //     //   'cursor-pointer hover:opacity-75 text-right absolute bottom-3 right-4 text-sm text-[#6C737C] dark:text-white'
+  //     // )}
+  //     className={classNames(
+  //       'cursor-pointer hover:opacity-75 text-right text-sm pb-3 pr-4 text-[#6C737C] dark:text-white'
+  //     )}
+  //   >
+  //     Powered by groupfi.ai
+  //   </div>
+  // )
 }

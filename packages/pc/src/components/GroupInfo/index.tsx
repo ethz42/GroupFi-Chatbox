@@ -44,7 +44,6 @@ import { useSWRConfig } from 'swr'
 import useUserBrowseMode from 'hooks/useUserBrowseMode'
 import useGroupMeta from 'hooks/useGroupMeta'
 import { IMUserLikeGroupMember, IMUserMuteGroupMember } from 'groupfi-sdk-core'
-import { Name, Avatar } from 'components/Shared'
 
 const maxShowMemberNumber = 15
 
@@ -269,21 +268,13 @@ export function Member(props: {
     >
       <div className={classNames('w-14 cursor-pointer m-auto')}>
         <div className={classNames('relative')}>
-          <Avatar
-            address={address}
-            avatar={userProfile?.avatar}
-            className={classNames('rounded-lg w-full h-14 object-cover')}
-            onClick={() => {
-              setMenuShow((s) => !s)
-            }}
-          />
-          {/* <img
+          <img
             onClick={() => {
               setMenuShow((s) => !s)
             }}
             className={classNames('rounded-lg w-full h-14 object-cover')}
             src={avatar}
-          /> */}
+          />
           {isMuted ? (
             <img
               className={classNames('absolute right-0 bottom-0')}
@@ -301,8 +292,7 @@ export function Member(props: {
             'text-xs dark:text-white opacity-50 text-center mt-1 truncate'
           )}
         >
-          <Name name={userProfile?.name ?? name} address={address} />
-          {/* {userProfile?.name ?? name} */}
+          {userProfile?.name ?? name}
         </p>
       </div>
       <div
@@ -749,8 +739,7 @@ function LeaveOrUnMark(props: {
   //   : undefined
 
   const isGroupMemberOrMarked = isGroupMember || addressStatus.marked
-  const isPublicGroupAndNotMarked =
-    isPublic === true && addressStatus.marked === false
+  const isPublicGroupAndNotMarked = isPublic === true && addressStatus.marked === false
 
   const text = isGroupMemberOrMarked
     ? { verb: 'Leave', verbing: 'Leaving' }
@@ -762,7 +751,9 @@ function LeaveOrUnMark(props: {
 
   return (
     <>
-      <div className={classNames('left-0 bottom-0 w-full px-5 text-center')}>
+      <div
+        className={classNames('left-0 bottom-0 w-full px-5 text-center')}
+      >
         <div
           className={classNames(
             'flex flex-row justify-center border-t border-black/10 dark:border-[#eeeeee80] pt-4 pb-5 text-[#D53554] text-sm cursor-pointer',

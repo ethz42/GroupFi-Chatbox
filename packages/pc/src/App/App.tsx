@@ -17,9 +17,9 @@ import {
 import {
   renderCeckRenderWithDefaultWrapper,
   AppLoading
-} from 'components/Shared'
+} from '../components/Shared'
 import SMRPurchase from '../components/SMRPurchase'
-import { Register, Login } from 'components/RegisterAndLogin'
+import { Register, Login } from '../components/RegisterAndLogin'
 import {
   changeActiveTab,
   setNodeInfo,
@@ -36,60 +36,62 @@ import {
   ACTIVE_TAB_KEY,
   GROUP_INFO_KEY,
   getLocalParentStorage
-} from 'utils/storage'
-import useIsForMeGroupsLoading from 'hooks/useIsForMeGroupsLoading'
-import { removeHexPrefixIfExist } from 'utils'
-import useProfile from 'hooks/useProfile'
+} from '../utils/storage'
+import useIsForMeGroupsLoading from '../hooks/useIsForMeGroupsLoading'
+import { removeHexPrefixIfExist } from '../utils'
+import useProfile from '../hooks/useProfile'
 
 const routes: RouteObject[] = [
   {
     path: '/',
     async lazy() {
-      const Component = (await import('../components/GroupList')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'group/:id',
-    async lazy() {
-      const Component = (await import('../components/ChatRoom')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'group/:id/members',
-    async lazy() {
-      const Component = (await import('../components/GroupMemberList')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'group/:id/info',
-    async lazy() {
-      const Component = (await import('../components/GroupInfo')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'group/:id/members',
-    async lazy() {
-      const Component = (await import('../components/GroupMemberList')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'user/:id',
-    async lazy() {
-      const Component = (await import('../components/UserInfo')).default
-      return { Component }
-    }
-  },
-  {
-    path: 'profile/edit',
-    async lazy() {
-      const Component = (await import('../components/ProfileEdit')).default
-      return { Component }
-    }
+      const Component = (await import('../components/SplitLayout/SplitLayout')).default
+      return { element: <Component /> }
+    },
+    children: [
+      {
+        path: 'group/:id',
+        async lazy() {
+          const Component = (await import('../components/ChatRoom')).default
+          return { Component }
+        }
+      },
+      {
+        path: 'group/:id/members',
+        async lazy() {
+          const Component = (await import('../components/GroupMemberList')).default
+          return { Component }
+        }
+      },
+      {
+        path: 'group/:id/info',
+        async lazy() {
+          const Component = (await import('../components/GroupInfo')).default
+          return { Component }
+        }
+      },
+      {
+        path: 'user/:id',
+        async lazy() {
+          const Component = (await import('../components/UserInfo')).default
+          return { Component }
+        }
+      },
+      {
+        path: 'profile/edit',
+        async lazy() {
+          const Component = (await import('../components/ProfileEdit')).default
+          return { Component }
+        }
+      },
+      {
+        path: '/discover',
+        async lazy() {
+          const Component = (await import('../components/Discover')).default
+          return { Component }
+        }
+      }
+    ]
   }
 ]
 
@@ -237,6 +239,9 @@ export function AppWithWalletType(props: {
       )
       setWalletInstalled(true)
       setWalletConnected(true)
+      console.log('connectWalletres',res.address)
+      console.log('connectWalletresmode',res.mode)
+
       setModeAndAddress({
         mode: res.mode,
         address: res.address
@@ -296,6 +301,7 @@ export function AppWithWalletType(props: {
   }
 
   const onMetaMaskAccountChanged = async (newAccount: string) => {
+    console.log("gggg", newAccount)
     await messageDomain.onMetaMaskAccountChanged(newAccount)
     setModeAndAddress({
       address: newAccount,
@@ -304,11 +310,13 @@ export function AppWithWalletType(props: {
   }
 
   useEffect(() => {
+    console.log("addresscompare",modeAndAddress?.address, metaMaskAccountFromDapp)
     if (
       metaMaskAccountFromDapp !== undefined &&
       modeAndAddress !== undefined &&
       modeAndAddress.address !== metaMaskAccountFromDapp
     ) {
+      console.log("aaaaa")
       onMetaMaskAccountChanged(metaMaskAccountFromDapp)
     }
   }, [metaMaskAccountFromDapp])
@@ -370,6 +378,7 @@ function AppLaunchAnAddress(props: {
     }
   }
 
+  
   const startup = async () => {
     appDispatch(setIsMessageDomainIniting(true))
     await clearUp()
@@ -584,6 +593,7 @@ function AppDelegationModeCheck(props: { address: string }) {
   const [isRegistered, setIsRegistered] = useState<boolean | undefined>(
     messageDomain.isRegistered()
   )
+  console.log('messageDomainisRegistered',isRegistered)
 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | undefined>(
     messageDomain.isLoggedIn()
@@ -667,3 +677,4 @@ function AppDelegationModeCheck(props: { address: string }) {
     <AppRouter />
   )
 }
+
