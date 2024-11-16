@@ -28,27 +28,29 @@ interface ContractResponse {
 }
 
 const GroupChatCard: React.FC<GroupChat> = ({ imageUrl, title, description, activeOnChain, members }) => (
-  <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-8 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white dark:bg-gray-800 w-[400px]">
-    <div className="flex flex-col items-center">
-      <img
-        src={imageUrl}
-        alt={title}
-        className="w-32 h-32 rounded-full object-cover shadow-md"
-      />
-      <h3 className="text-2xl font-bold mt-6 dark:text-white">{title}</h3>
-      <p className="text-base text-gray-600 dark:text-gray-400 text-center w-full mt-4 max-w-[320px]">{description}</p>
-    </div>
-    <div className="flex justify-between mt-8 text-base font-medium max-w-[320px] mx-auto w-full">
-      <span className="flex items-center text-gray-600 dark:text-gray-300">
-        <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
-        {activeOnChain} active
-      </span>
-      <span className="flex items-center text-gray-600 dark:text-gray-300">
-        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-        </svg>
-        {members}
-      </span>
+  <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white dark:bg-gray-800 w-[280px] h-[300px] relative">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col items-center">
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-20 h-20 rounded-full object-cover shadow-md"
+        />
+        <h3 className="text-lg font-bold mt-4 dark:text-white">{title}</h3>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">{description}</p>
+      <div className="absolute bottom-6 left-6 right-6 flex justify-between text-sm font-medium">
+        <span className="flex items-center text-gray-600 dark:text-gray-300">
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></div>
+          {activeOnChain} active
+        </span>
+        <span className="flex items-center text-gray-600 dark:text-gray-300">
+          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+          </svg>
+          {members}
+        </span>
+      </div>
     </div>
   </div>
 );
@@ -64,7 +66,8 @@ const Discover: React.FC = () => {
       // Placeholder data - replace with actual API call
       const mockTabs = [
         { id: 'poap', name: 'POAP', chainId: '1', description: 'Connect with other participants and organizers to share your memories.' },
-        { id: 'ethglobalBankok', name: 'ethglobalBankok', chainId: '1', description: 'ethglobalBankok' },
+        { id: 'ethglobalBankok', name: 'Ethglobal Bankok', chainId: '1', description: 'ethglobalBankok' },
+        { id: 'chiliz', name: 'Chiliz Fan Token', chainId: '56', description: 'Chiliz' },
       ];
       setTabs(mockTabs);
       setActiveTab(mockTabs[0].id);
@@ -109,19 +112,57 @@ const Discover: React.FC = () => {
     setLoading(true);
     try {
       const totalSupplyResponse = await fetchTotalSupply();
-      console.log('totalSupplyResponse121',totalSupplyResponse)
       const membersCount = totalSupplyResponse.success ? totalSupplyResponse.data : '0';
 
-      const mockData = [
-        {
-          id: '1',
-          imageUrl: 'https://poap.zendesk.com/hc/theming_assets/01HZHAFBV2ZVH4TYE1F7J8SY0C',
-          title: 'POAP Groups',
-          description: 'Welcome, Collector! Connect with new friends or reconnect with familiar faces from past events. Enjoy the community!',
+      let mockData;
+      if (tabId === 'poap') {
+        mockData = [
+          {
+            id: '1',
+            imageUrl: 'https://poap.zendesk.com/hc/theming_assets/01HZHAFBV2ZVH4TYE1F7J8SY0C',
+            title: 'POAP Groups',
+            description: 'Welcome, Collectors! Connect with new friends or reconnect with familiar faces from past events. Enjoy the community!',
+            activeOnChain: '1.2k',
+            members: membersCount ?? '0'
+          },
+        ];
+      } else if (tabId === 'ethglobalBankok') {
+        mockData = [
+          {
+            id: '2',
+            imageUrl: 'https://ethglobal.b-cdn.net/packs/hacker/logo/default.jpg',
+            title: 'ETHGlobal Bangkok Builders',
+            description: 'Connect with fellow builders and hackers from ETHGlobal Bangkok. Share your projects and experiences!',
+            activeOnChain: '800',
+            members: '2.5k'
+          },
+          {
+            id: '3',
+            imageUrl: 'https://ethglobal.b-cdn.net/packs/builder/logo/default.jpg',
+            title: 'Bangkok DeFi Innovation',
+            description: 'A space for DeFi enthusiasts and builders to discuss innovative solutions and challenges in the ecosystem.',
+            activeOnChain: '650',
+            members: '1.8k'
+          },
+          {
+            id: '4',
+            imageUrl: 'https://ethglobal.b-cdn.net/packs/pioneer/logo/default.jpg',
+            title: 'Bangkok Web3 Social',
+            description: 'Join the conversation about Web3 social applications and network with other developers from the hackathon.',
+            activeOnChain: '720',
+            members: '2.1k'
+          },
+        ];
+      } else if (tabId === 'chiliz') {
+        mockData = [{
+          id: 'santos-fc-fan-token',
+          imageUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/15248.png',
+          title: 'Santos FC Fan Token',
+          description: 'Santos FC Fan Token (SANTOS) is a fan token of the Brazilian football team Santos FC, launched in partnership with Binance Launchpool.',
           activeOnChain: '1.2k',
-          members: membersCount ?? '0'
-        },
-      ];
+          members: '5.5M+'
+        }];
+      }
       setGroupChats(mockData);
     } catch (error) {
       console.error('Error fetching group chat data:', error);
@@ -183,7 +224,7 @@ const Discover: React.FC = () => {
             <div className="animate-spin rounded-full h-10 w-10 border-3 border-accent-600 border-t-transparent"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
             {groupChats.map((groupChat) => (
               <GroupChatCard key={groupChat.id} {...groupChat} />
             ))}
