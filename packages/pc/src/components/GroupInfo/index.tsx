@@ -683,21 +683,17 @@ function LeaveOrUnMark(props: {
 
   const [isSubscribing, setIsSubscribing] = useState(false)
 
-  const [addressStatus, setAddressStatus] = useState<{
-    marked: boolean
-    muted: boolean
-    isQualified: boolean
-  }>()
+  const [marked, setMarked] = useState<boolean | undefined>(undefined)
 
   const { isPublic } = useGroupIsPublic(groupId)
 
-  const fetchAddressStatus = async () => {
-    const status = await groupFiService.getAddressStatusInGroup(groupId)
-    setAddressStatus(status)
+  const getGroupMarked = async () => {
+    const res = await groupFiService.getGroupMarked(groupId)
+    setMarked(res)
   }
 
   useEffect(() => {
-    fetchAddressStatus()
+    getGroupMarked()
   }, [])
 
   const hide = () => {
@@ -714,17 +710,11 @@ function LeaveOrUnMark(props: {
     navigate('/')
   }
 
-  if (addressStatus === undefined || isPublic === undefined) {
+  if (marked === undefined || isPublic === undefined) {
     return null
   }
 
-  // private group but is not a group member, show nothing
   if (!isGroupMember && !isPublic) {
-    return null
-  }
-
-  // public group and qualified but is not a group member, show nothing
-  if (!isGroupMember && isPublic && addressStatus.isQualified) {
     return null
   }
 
@@ -738,8 +728,8 @@ function LeaveOrUnMark(props: {
   //   ? { verb: 'Unsubscribe', verbing: 'Unsubscribing' }
   //   : undefined
 
-  const isGroupMemberOrMarked = isGroupMember || addressStatus.marked
-  const isPublicGroupAndNotMarked = isPublic === true && addressStatus.marked === false
+  const isGroupMemberOrMarked = isGroupMember || marked
+  const isPublicGroupAndNotMarked = isPublic === true && marked === false
 
   const text = isGroupMemberOrMarked
     ? { verb: 'Leave', verbing: 'Leaving' }
@@ -752,6 +742,9 @@ function LeaveOrUnMark(props: {
   return (
     <>
       <div
+        // className={classNames(
+        //   'absolute left-0 bottom-0 w-full px-5 text-center'
+        // )}
         className={classNames('left-0 bottom-0 w-full px-5 text-center')}
       >
         <div

@@ -4,6 +4,10 @@ import { ethers } from 'ethers';
 import CONTRACT_ABIS from 'contracts/abis';
 import CONTRACT_ADDRESSES from 'contracts/address'
 import { formatNumber } from 'utils/format';
+import { useNavigate } from 'react-router-dom';
+import { removeHexPrefixIfExist } from 'utils';
+import { useMessageDomain } from "groupfi-sdk-chat";  
+
 
 interface Tab {
   id: string;
@@ -14,6 +18,7 @@ interface Tab {
 
 interface GroupChat {
   id: string;
+  groupId: string;
   imageUrl: string;
   title: string;
   description: string;
@@ -26,34 +31,50 @@ interface ContractResponse {
   data?: string;
   error?: Error;
 }
+const GroupChatCard: React.FC<GroupChat> = ({ groupId, imageUrl, title, description, activeOnChain, members }) => {
+  const navigate = useNavigate();
+  const { messageDomain } = useMessageDomain();  // 添加这个 hook
 
-const GroupChatCard: React.FC<GroupChat> = ({ imageUrl, title, description, activeOnChain, members }) => (
-  <div className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white dark:bg-gray-800 w-[280px] h-[300px] relative">
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col items-center">
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-20 h-20 rounded-full object-cover shadow-md"
-        />
-        <h3 className="text-lg font-bold mt-4 dark:text-white">{title}</h3>
-      </div>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">{description}</p>
-      <div className="absolute bottom-6 left-6 right-6 flex justify-between text-sm font-medium">
-        <span className="flex items-center text-gray-600 dark:text-gray-300">
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></div>
-          {activeOnChain} active
-        </span>
-        <span className="flex items-center text-gray-600 dark:text-gray-300">
-          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-          </svg>
-          {members}
-        </span>
+
+  const handleClick = async() => {
+    const groupFiService = messageDomain.getGroupFiService();
+    const includes = [{ groupId }];
+    const configs = await groupFiService.fetchForMeGroupConfigs({ includes });
+    const processedGroupId = removeHexPrefixIfExist(configs[0].groupId);
+    navigate(`/group/${processedGroupId}`);
+  };
+
+  return (
+    <div 
+      onClick={handleClick}
+      className="border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.01] bg-white dark:bg-gray-800 w-[280px] h-[300px] relative cursor-pointer"
+    >
+      <div className="flex flex-col h-full">
+        <div className="flex flex-col items-center">
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-20 h-20 rounded-full object-cover shadow-md"
+          />
+          <h3 className="text-lg font-bold mt-4 dark:text-white">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 line-clamp-3">{description}</p>
+        <div className="absolute bottom-6 left-6 right-6 flex justify-between text-sm font-medium">
+          <span className="flex items-center text-gray-600 dark:text-gray-300">
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></div>
+            {activeOnChain} active
+          </span>
+          <span className="flex items-center text-gray-600 dark:text-gray-300">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+            </svg>
+            {members}
+          </span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Discover: React.FC = () => {
   const [tabs, setTabs] = useState<Tab[]>([]);
@@ -119,6 +140,7 @@ const Discover: React.FC = () => {
         mockData = [
           {
             id: '1',
+            groupId: '0x8731d45E6c7F832B13453F3796B4A44Bb0582344',
             imageUrl: 'https://poap.zendesk.com/hc/theming_assets/01HZHAFBV2ZVH4TYE1F7J8SY0C',
             title: 'POAP Groups',
             description: 'Welcome, Collectors! Connect with new friends or reconnect with familiar faces from past events. Enjoy the community!',
@@ -130,24 +152,27 @@ const Discover: React.FC = () => {
         mockData = [
           {
             id: '2',
+            groupId: 'groupfiETHGlobalHackerPack72355fbb2902ac6bf8f3dca9ddd76c30eb9ec0e68ce4eec87fe34090abf294e5',
             imageUrl: 'https://ethglobal.b-cdn.net/packs/hacker/logo/default.jpg',
-            title: 'ETHGlobal Bangkok Builders',
+            title: 'ETHGlobal Hacker Pack',
             description: 'Connect with fellow builders and hackers from ETHGlobal Bangkok. Share your projects and experiences!',
             activeOnChain: '800',
             members: '2.5k'
           },
           {
             id: '3',
+            groupId: 'groupfiETHGlobalBuilderPackb4ee12d5440e11c2288422ea64b3a995a0b0bd6220e25182394cf8fa12238232',
             imageUrl: 'https://ethglobal.b-cdn.net/packs/builder/logo/default.jpg',
-            title: 'Bangkok DeFi Innovation',
+            title: 'ETHGlobal Builder Pack',
             description: 'A space for DeFi enthusiasts and builders to discuss innovative solutions and challenges in the ecosystem.',
             activeOnChain: '650',
             members: '1.8k'
           },
           {
             id: '4',
+            groupId: 'groupfiETHGlobalPioneerPack5e0f5eeda11e09ca1227ae02b90f8f6c844b20e89056f932cb7527a90c743610',
             imageUrl: 'https://ethglobal.b-cdn.net/packs/pioneer/logo/default.jpg',
-            title: 'Bangkok Web3 Social',
+            title: 'ETHGlobal Pioneer Pack',
             description: 'Join the conversation about Web3 social applications and network with other developers from the hackathon.',
             activeOnChain: '720',
             members: '2.1k'
@@ -156,6 +181,7 @@ const Discover: React.FC = () => {
       } else if (tabId === 'chiliz') {
         mockData = [{
           id: 'santos-fc-fan-token',
+          groupId: 'groupfiSANTOSdf8a7f42c5f9d8534dd8f69a2f65ecbc38fb5744181f2cc460b720a911e1f967',
           imageUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/15248.png',
           title: 'Santos FC Fan Token',
           description: 'Santos FC Fan Token (SANTOS) is a fan token of the Brazilian football team Santos FC, launched in partnership with Binance Launchpool.',
@@ -163,7 +189,7 @@ const Discover: React.FC = () => {
           members: '5.5M+'
         }];
       }
-      setGroupChats(mockData);
+      setGroupChats(mockData!);
     } catch (error) {
       console.error('Error fetching group chat data:', error);
     } finally {

@@ -413,7 +413,7 @@ function UserProfile(props: { groupFiService: GroupFiService }) {
           ) : null}
         </div>
       </div>
-      {/* <Powered /> */}
+      <Powered />
     </div>
   )
 }

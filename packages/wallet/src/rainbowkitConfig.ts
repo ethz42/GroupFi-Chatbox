@@ -8,10 +8,9 @@ import {
 import {
     getDefaultConfig,
     RainbowKitProvider,
-    type Config
   } from '@rainbow-me/rainbowkit';
 
-export const config: Config = getDefaultConfig({
+export const config = getDefaultConfig({
     appName: 'My RainbowKit App',
     projectId: 'YOUR_PROJECT_ID',
     chains: [mainnet, polygon, optimism, arbitrum, base],

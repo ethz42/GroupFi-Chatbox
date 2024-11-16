@@ -61,7 +61,7 @@ export function Login() {
           </button>
         </div>
       </div>
-      {/* <Powered /> */}
+      <Powered />
     </div>
   )
 }
@@ -139,7 +139,7 @@ export function Register() {
           </div>
         </div>
       </div>
-      {/* <Powered /> */}
+      <Powered />
     </div>
   )
 }
