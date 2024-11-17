@@ -2,45 +2,52 @@ package circuits
 
 import (
 	"github.com/brevis-network/brevis-sdk/sdk"
+	"github.com/ethereum/go-ethereum/common"
 )
 
-type AppCircuit struct{}
+type AppCircuit struct{
+	UserAddr sdk.Uint248
+}
 
-var USDCTokenAddr = sdk.ConstUint248("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
-var minimumVolume = sdk.ConstUint248(500000000) // minimum 500 USDC
 var _ sdk.AppCircuit = &AppCircuit{}
 
 func (c *AppCircuit) Allocate() (maxReceipts, maxStorage, maxTransactions int) {
-	// Our app is only ever going to use one storage data at a time so
+	// This demo app is only going to use two storage data at a time so
 	// we can simply limit the max number of data for storage to 1 and
 	// 0 for all others
-	return 32, 0, 0
+	return 0, 32, 0
 }
 
+var USDTAddress = sdk.ConstUint248(
+	common.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7"))
+var minimumToken = sdk.ConstUint248(1000000) // minimum 1 USDT, 6 decimals
+
 func (c *AppCircuit) Define(api *sdk.CircuitAPI, in sdk.DataInput) error {
-	receipts := sdk.NewDataStream(api, in.Receipts)
-	receipt := sdk.GetUnderlying(receipts, 0)
+	slots := sdk.NewDataStream(api, in.StorageSlots)
 
-	// Check logic
-	// The first field exports `from` parameter from Transfer Event
-	// It should use the second topic in Transfer Event log
-	api.Uint248.AssertIsEqual(receipt.Fields[0].Contract, USDCTokenAddr)
-	api.Uint248.AssertIsEqual(receipt.Fields[0].IsTopic, sdk.ConstUint248(1))
-	api.Uint248.AssertIsEqual(receipt.Fields[0].Index, sdk.ConstUint248(1))
+	var u248 = api.Uint248
+	var b32 = api.Bytes32
+	sdk.AssertEach(slots, func(current sdk.StorageSlot) sdk.Uint248 {
+		contractIsEq := u248.IsEqual(current.Contract, USDTAddress)
 
-	// Make sure two fields uses the same log to make sure account address linking with correct volume
-	api.Uint32.AssertIsEqual(receipt.Fields[0].LogPos, receipt.Fields[1].LogPos)
+		// mapping(address => uint) public balances;
+		// balance slot location 0x0000000000000000000000000000000000000000000000000000000000000002
+		// slot key = keccak(u256(userAddress).u256(location)
+		balanceSlot := api.SlotOfStructFieldInMapping(2, 0, api.ToBytes32(c.UserAddr))
+		balanceSlotKeyIsEq := b32.IsEqual(current.Slot, balanceSlot)
 
-	// The second field exports `Volume` parameter from Transfer Event
-	// It should use Data in Transfer Event log
-	api.Uint248.AssertIsEqual(receipt.Fields[1].IsTopic, sdk.ConstUint248(0))
-	api.Uint248.AssertIsEqual(receipt.Fields[1].Index, sdk.ConstUint248(0))
+		return u248.And(
+			contractIsEq,
+			balanceSlotKeyIsEq,
+		)
+	})
 
-	// Make sure this transfer has minimum 500 USDC volume
-	api.Uint248.AssertIsLessOrEqual(minimumVolume, api.ToUint248(receipt.Fields[1].Value))
+	balances := sdk.Map(slots, func(current sdk.StorageSlot) sdk.Uint248 {
+		return api.ToUint248(current.Value)
+	})
+	totalBalance := sdk.Sum(balances)
+	u248.AssertIsLessOrEqual(minimumToken, totalBalance)
 
-	api.OutputUint(64, api.ToUint248(receipt.BlockNum))
-	api.OutputAddress(api.ToUint248(receipt.Fields[0].Value))
-	api.OutputBytes32(receipt.Fields[1].Value)
+	api.OutputAddress(c.UserAddr)
 	return nil
 }
