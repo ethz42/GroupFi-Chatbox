@@ -277,10 +277,8 @@ export function ChatRoom(props: { groupId: string; isBrowseMode: boolean }) {
         ...status,
         isHasPublicKey
       }
-      console.log('***Address Status', status)
       isHasPublicKeyChangedCallbackRef.current = (value) => {
         const { isHasPublicKey } = value ?? {}
-        console.log('***isHasPublicKeyChangedCallbackRef', isHasPublicKey)
         setAddressStatus((prev) => {
           if (prev !== undefined) {
             return { ...prev, isHasPublicKey }
@@ -660,14 +658,17 @@ function ChatRoomButton(props: {
           : ''
       )}
       onClick={async () => {
-        if (qualified || !marked) {
+        // if (qualified || !marked) {
+        if (qualified) {
           // setLoading(true)
-          setLoadingLabel(qualified ? 'Joining in' : 'Subscribing')
-          const promise = qualified
-            ? messageDomain.joinGroup(groupId)
-            : messageDomain.markGroup(groupId)
+          setLoadingLabel('Joining in')
+          await messageDomain.joinGroup(groupId)
+          // setLoadingLabel(qualified ? 'Joining in' : 'Subscribing')
+          // const promise = qualified
+          //   ? messageDomain.joinGroup(groupId)
+          //   : messageDomain.markGroup(groupId)
 
-          await promise
+          // await promise
           refresh()
           setLoadingLabel('')
         }
@@ -731,33 +732,11 @@ function MarkedContent(props: {
     tokenThresValue,
     chainId,
     symbol,
+    qualifyDescription,
     collectionName
   } = groupMeta
   const isToken: Boolean =
     qualifyType === 'token' && contractAddress !== undefined
-
-  const [tokenInfo, setTokenInfo] = useState<
-    | { TotalSupply: string; Decimals: number; Name: string; Symbol: string }
-    | undefined
-  >(undefined)
-
-  const fetchTokenTotalBalance = async () => {
-    const res = await groupFiService.fetchTokenTotalBalance(
-      contractAddress,
-      chainId
-    )
-    setTokenInfo(res)
-  }
-
-  useEffect(() => {
-    if (isToken && !symbol) {
-      fetchTokenTotalBalance()
-    }
-  }, [])
-
-  if (isToken && !symbol && tokenInfo === undefined) {
-    return ''
-  }
 
   if (qualifyType === 'event') {
     return (
@@ -774,6 +753,21 @@ function MarkedContent(props: {
     )
   }
 
+  if (qualifyType === 'metadata') {
+    return (
+      <div className={classNames('flex items-center justify-center')}>
+        <WarningSVG />
+        <span
+          className={classNames(
+            'font-medium mx-1 inline-block truncate align-bottom'
+          )}
+        >
+          {qualifyDescription}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className={classNames('flex items-center justify-center')}>
       <WarningSVG />
@@ -784,13 +778,15 @@ function MarkedContent(props: {
         )}
         style={{
           // maxWidth: `calc(100% - 210px)`
-          maxWidth: `calc(100% - 140px)`
+          maxWidth: !!props.buylink
+            ? `calc(100% - 210px)`
+            : `calc(100% - 140px)`
         }}
       >
         {qualifyType === 'nft'
           ? collectionName ?? groupName
           : isToken
-          ? `${tokenThresValue} ${!!symbol ? symbol : tokenInfo?.Symbol}`
+          ? `${tokenThresValue} ${symbol}`
           : null}
       </span>
       <span>to speak</span>

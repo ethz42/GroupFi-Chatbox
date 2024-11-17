@@ -62,16 +62,7 @@ export function Account() {
 
   return (
     <div className="flex w-full items-center justify-between px-6">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-white truncate">GroupFi</h1>
-      {/* <ConnectButton.Custom>
-        {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
-          return (
-            <div className="flex-shrink-0">
-              <ConnectButton />
-            </div>
-          )
-        }}
-      </ConnectButton.Custom> */}
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-white truncate">GroupFun</h1>
 
       <PrivyLoginButton disableLogin={disableLogin} handleLogin={handleLogin} address={address}/>
     </div>

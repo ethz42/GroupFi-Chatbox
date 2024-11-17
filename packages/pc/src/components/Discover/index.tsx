@@ -87,7 +87,7 @@ const Discover: React.FC = () => {
       // Placeholder data - replace with actual API call
       const mockTabs = [
         { id: 'poap', name: 'POAP', chainId: '1', description: 'Connect with other participants and organizers to share your memories.' },
-        { id: 'ethglobalBankok', name: 'Ethglobal Bankok', chainId: '1', description: 'ethglobalBankok' },
+        { id: 'ethglobalBankok', name: 'Ethglobal Bankok', chainId: '1', description: 'Come build our decentralized future' },
         { id: 'chiliz', name: 'Chiliz Fan Token', chainId: '56', description: 'Chiliz' },
       ];
       setTabs(mockTabs);
@@ -140,7 +140,7 @@ const Discover: React.FC = () => {
         mockData = [
           {
             id: '1',
-            groupId: '0x8731d45E6c7F832B13453F3796B4A44Bb0582344',
+            groupId: 'groupfiaff86b6c954e65ca57db2f469a9fce4eb0417dbf245bb411d75eae350406bba5',
             imageUrl: 'https://poap.zendesk.com/hc/theming_assets/01HZHAFBV2ZVH4TYE1F7J8SY0C',
             title: 'POAP Groups',
             description: 'Welcome, Collectors! Connect with new friends or reconnect with familiar faces from past events. Enjoy the community!',
